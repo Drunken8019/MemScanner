@@ -22,47 +22,52 @@ std::vector<MemoryScanner::MemoryBlock> MemoryScanner::getMemoryInformation(HAND
 	return result;
 }
 
+boolean MemoryScanner::updateMemoryBlock(MemoryBlock &block, SIZE_T &bytesRead)
+{
+	if(ReadProcessMemory(block.process, block.baseAddress, block.buffer, block.size, &bytesRead) != 0)
+	{
+		return true;
+	}
+	return false;
+}
+
 void MemoryScanner::performOperations()
 {
 	DWORD pid; //15144   - sizeof(const char*)
 	HANDLE process;
 	unsigned char* baseAddr = 0;
-	int searchInt = 199;
-	SIZE_T* bytesRead{};
+	SIZE_T bytesRead;
+
 	std::cout << "Process ID: ";
 	std::cin >> pid;
 	process = getProcessHandle(pid);
-	double fullSize = 0;
+
+
 	std::vector<MemoryScanner::MemoryBlock> memInfo = MemoryScanner::getMemoryInformation(process, baseAddr);
-	for (auto& block : memInfo)
+
+	int matchCount = 0;
+	for (auto& block : memInfo) //Very barbone search, no iterations possible, has to be expanded in own function
 	{
-
-		/*if (WriteProcessMemory(block.process, block.baseAddress, yuhu, sizeof(yuhu), NULL) != NULL)
+		if (updateMemoryBlock(block, bytesRead))
 		{
-			std::cout << "wrote\n";
-		}
-		*/
-
-		if (ReadProcessMemory(block.process, block.baseAddress, block.buffer, block.size, bytesRead) != 0)
-		{
-
-			for (int i = 0; i < block.size - sizeof(searchInt); i++)
+			std::cout << "Addr: " << block.baseAddress << "\n" << "Bytes read: " << bytesRead << "\n";
+			for (int i = 0; i < bytesRead; i++)
 			{
-				//if (memcmp(&block.buffer[i], &searchInt, sizeof(searchInt)) == 0)
-				if ((int)block.buffer[i] == searchInt)
+				switch(sizeof(int))
 				{
-					std::cout << &block.baseAddress + i << ": " << (int)block.buffer[i];
-					std::cout << "\n";
+				case 1:
+					//std::cout << (char)(block.buffer[i]);
+					break;
+				
+				case 4:
+					//std::cout << (int)(block.buffer[i]);
+					if (95 == (int)block.buffer[i]) { matchCount++; }
+					i += 3;
+					break;
 				}
-				//else{ std::cout << &block.baseAddress + i << " :" << (unsigned int)&block.buffer[i] << "\n"; }
+				//std::cout << "\n";
 			}
-
-
-			//std::cout << &block.baseAddress << " :" << (int)&block.buffer << "\n";
-
-			fullSize += block.size;
 		}
-
 	}
-	std::cout << fullSize / 1000000 << "MB occupied\n";
+	std::cout << "Match count: " << matchCount;
 }
