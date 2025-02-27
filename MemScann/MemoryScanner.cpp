@@ -33,7 +33,8 @@ boolean MemoryScanner::updateMemoryBlock(MemoryBlock &block, SIZE_T &bytesRead)
 
 void MemoryScanner::performOperations()
 {
-	DWORD pid; //15144   - sizeof(const char*)
+	DWORD pid; //15144   - sizeof(const char*) 
+	//testcomment
 	HANDLE process;
 	unsigned char* baseAddr = 0;
 	SIZE_T bytesRead;
