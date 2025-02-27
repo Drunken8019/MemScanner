@@ -24,7 +24,7 @@ std::vector<MemoryScanner::MemoryBlock> MemoryScanner::getMemoryInformation(HAND
 
 void MemoryScanner::performOperations()
 {
-	DWORD pid; //15144   - sizeof(const char*) testcommithaiderer
+	DWORD pid; //15144   - sizeof(const char*) 
 	//testcomment
 	HANDLE process;
 	unsigned char* baseAddr = 0;
