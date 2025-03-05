@@ -34,7 +34,6 @@ boolean MemoryScanner::updateMemoryBlock(MemoryBlock &block, SIZE_T &bytesRead)
 
 std::vector<MemoryScanner::Match> MemoryScanner::MemorySearch(std::vector<MemoryScanner::MemoryBlock> blocks, void* valueToSearch, int sizeOfValue, SIZE_T &bytesRead)
 {
-	std::cout << sizeof(valueToSearch) << "\n";
 	std::vector<MemoryScanner::Match> result;
 	int valueRead = 0;
 	for (auto& block : blocks)
