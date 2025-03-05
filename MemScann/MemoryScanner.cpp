@@ -6,6 +6,7 @@ HANDLE MemoryScanner::getProcessHandle(DWORD pid)
 	if (result == NULL)
 	{
 		std::cout << GetLastError();
+		return NULL;
 	}
 	else { return result; }
 }
@@ -31,44 +32,57 @@ boolean MemoryScanner::updateMemoryBlock(MemoryBlock &block, SIZE_T &bytesRead)
 	return false;
 }
 
-void MemoryScanner::performOperations()
+std::vector<MemoryScanner::Match> MemoryScanner::MemorySearch(std::vector<MemoryScanner::MemoryBlock> blocks, void* valueToSearch, int sizeOfValue, SIZE_T &bytesRead)
 {
-	DWORD pid; //15144   - sizeof(const char*) 
-	//testcomment
-	HANDLE process;
-	unsigned char* baseAddr = 0;
-	SIZE_T bytesRead;
-
-	std::cout << "Process ID: ";
-	std::cin >> pid;
-	process = getProcessHandle(pid);
-
-
-	std::vector<MemoryScanner::MemoryBlock> memInfo = MemoryScanner::getMemoryInformation(process, baseAddr);
-
-	int matchCount = 0;
-	for (auto& block : memInfo) //Very barbone search, no iterations possible, has to be expanded in own function
+	std::cout << sizeof(valueToSearch) << "\n";
+	std::vector<MemoryScanner::Match> result;
+	int valueRead = 0;
+	for (auto& block : blocks)
 	{
-		if (updateMemoryBlock(block, bytesRead))
+		if (MemoryScanner::updateMemoryBlock(block, bytesRead))
 		{
-			std::cout << "Addr: " << block.baseAddress << "\n" << "Bytes read: " << bytesRead << "\n";
 			for (int i = 0; i < bytesRead; i++)
 			{
-				switch(sizeof(int))
+				switch (sizeOfValue)
 				{
 				case 1:
-					//std::cout << (char)(block.buffer[i]);
+					if (*(char*)valueToSearch == (char)block.buffer[i]) { std::cout << (char)block.buffer[i]; result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
 					break;
-				
+
 				case 4:
-					//std::cout << (int)(block.buffer[i]);
-					if (95 == (int)block.buffer[i]) { matchCount++; }
+					
+					unsigned char temp[4] = { block.buffer[i], block.buffer[i + 1], block.buffer[i + 2], block.buffer[i + 3] };
+					std::memcpy(&valueRead, temp, 4);
+					if (*(int*)valueToSearch == valueRead) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
 					i += 3;
 					break;
 				}
-				//std::cout << "\n";
 			}
 		}
 	}
-	std::cout << "Match count: " << matchCount;
+	return result;
+}
+std::vector<MemoryScanner::Match> MemoryScanner::MemorySearch(std::vector<MemoryScanner::Match> matches, void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead)
+{
+	std::vector<MemoryScanner::Match> result;
+	int valueRead = 0;
+	for (auto& match : matches)
+	{
+		if (updateMemoryBlock(match.block, bytesRead))
+		{
+			switch (sizeOfValue)
+			{
+			case 1:
+				if (*(char*)valueToSearch == (char)match.block.buffer[match.offset]) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
+				break;
+
+			case 4:
+				unsigned char temp[4] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1], match.block.buffer[match.offset + 2], match.block.buffer[match.offset + 3] };
+				std::memcpy(&valueRead, temp, 4);
+				if (*(int*)valueToSearch == valueRead) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
+				break;
+			}
+		}
+	}
+	return result;
 }

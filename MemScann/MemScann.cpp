@@ -6,17 +6,61 @@
 int main()
 {
     MemoryScanner m1;
-    m1.performOperations();
 
+	DWORD pid;
+	HANDLE process;
+	unsigned char* baseAddr = 0;
+	SIZE_T bytesRead;
+	int d = 0;
+	int x = 0;
+	std::cout << "Process ID: ";
+	std::cin >> pid;
+	process = m1.getProcessHandle(pid);
+
+
+	std::vector<MemoryScanner::MemoryBlock> memInfo = m1.getMemoryInformation(process, baseAddr);
+	int matchCount = 0;
+	std::vector<MemoryScanner::Match> s1;
+	std::cout << "Enter value: ";
+	std::cin >> d;
+	s1 = m1.MemorySearch(memInfo, &d, 4, bytesRead);
+	for (auto& a : s1)
+	{
+		//WriteProcessMemory(a.block.process, a.block.baseAddress + a.offset, &x, sizeof(x), NULL);
+		matchCount++;
+	}
+	std::cout << "Match count: " << matchCount << "\n";
+	matchCount = 0;
+	while (d != -1)
+	{
+		std::cout << "Enter next value: ";
+		std::cin >> d;
+		if (d == -2)
+		{
+			for (auto& a : s1)
+			{
+				std::cout << (unsigned char)a.block.baseAddress + a.offset << "\n";
+			}
+		}
+		else if (d == -3)
+		{
+			std::cout << "Value to write: ";
+			std::cin >> x;
+			for (auto& a : s1)
+			{
+				WriteProcessMemory(a.block.process, a.block.baseAddress + a.offset, &x, sizeof(x), NULL);
+			}
+		}
+		else if (d != -1)
+		{
+			s1 = m1.MemorySearch(s1, &d, 4, bytesRead);
+			for (auto& a : s1)
+			{
+				//WriteProcessMemory(a.block.process, a.block.baseAddress + a.offset, &x, sizeof(x), NULL);
+				matchCount++;
+			}
+			std::cout << "Match count: " << matchCount << "\n";
+			matchCount = 0;
+		}
+	}
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
