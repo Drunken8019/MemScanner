@@ -35,5 +35,6 @@ public:
 	boolean updateMemoryBlock(MemoryBlock& block, SIZE_T& bytesRead);
 	std::vector<MemoryScanner::Match> MemorySearch(std::vector<MemoryScanner::MemoryBlock> blocks, void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
 	std::vector<MemoryScanner::Match> MemorySearch(std::vector<MemoryScanner::Match> matches, void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
+	void memDump(HANDLE hProcess, unsigned char* baseAddress, SIZE_T offset, int sizeOfValue);
 };
 

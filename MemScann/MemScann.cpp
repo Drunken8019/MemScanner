@@ -51,6 +51,14 @@ int main()
 				WriteProcessMemory(a.block.process, a.block.baseAddress + a.offset, &x, sizeof(x), NULL);
 			}
 		}
+		else if (d == -4)
+		{
+			
+			for (auto& a : s1)
+			{
+				m1.memDump(a.block.process, a.block.baseAddress, a.offset, sizeof(int));
+			}
+		}
 		else if (d != -1)
 		{
 			s1 = m1.MemorySearch(s1, &d, 4, bytesRead);

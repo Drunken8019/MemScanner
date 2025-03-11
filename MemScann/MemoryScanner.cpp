@@ -85,3 +85,15 @@ std::vector<MemoryScanner::Match> MemoryScanner::MemorySearch(std::vector<Memory
 	}
 	return result;
 }
+void MemoryScanner::memDump(HANDLE hProcess, unsigned char* baseAddress, SIZE_T offset, int sizeOfValue)
+{
+	unsigned char* targetAddress = baseAddress + offset;
+	std::vector<unsigned char> buffer(sizeOfValue);
+	SIZE_T bytesRead;
+
+	std::cout << "Debug: Base Address: " << std::hex << reinterpret_cast<uintptr_t>(baseAddress)
+		<< ", Offset: " << offset << ", Target Address: " << reinterpret_cast<uintptr_t>(targetAddress) << std::endl;
+
+}
+
+
