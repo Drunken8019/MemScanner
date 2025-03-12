@@ -24,6 +24,7 @@
     <ProjectGuid>{6b565399-3fdd-410a-af8e-90667541b7aa}</ProjectGuid>
     <RootNamespace>MemScann</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>MemScan</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -128,7 +129,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MemoryScanner.cpp" />
-    <ClCompile Include="MemScann.cpp" />
+    <ClCompile Include="MemScan.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MemoryScanner.h" />

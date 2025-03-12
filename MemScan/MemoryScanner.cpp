@@ -111,5 +111,4 @@ void MemoryScanner::memDump(HANDLE hProcess, unsigned char* baseAddress, SIZE_T 
 
 	std::cout << "Debug: Base Address: " << std::hex << reinterpret_cast<uintptr_t>(baseAddress)
 		<< ", Offset: " << offset << ", Target Address: " << reinterpret_cast<uintptr_t>(targetAddress) << std::endl;
-
 }
