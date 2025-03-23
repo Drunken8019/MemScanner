@@ -5,7 +5,6 @@ HANDLE MemoryScanner::getProcessHandle(DWORD pid)
 	HANDLE result = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
 	if (result == NULL)
 	{
-		std::cout << GetLastError();
 		return NULL;
 	}
 	else { return result; }
@@ -32,39 +31,77 @@ boolean MemoryScanner::updateMemoryBlock(MemoryBlock &block, SIZE_T &bytesRead)
 	return false;
 }
 
-void MemoryScanner::initMemorySearch(void* valueToSearch, int sizeOfValue, SIZE_T &bytesRead)
+void MemoryScanner::initMemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T &bytesRead)
 {
+	short shortVal = 0;
+	int intVal = 0;
+	double doubleVal = 0;
+
 	std::vector<MemoryScanner::Match> result;
-	int valueRead = 0;
 	for (auto& block : blocks)
 	{
 		if (MemoryScanner::updateMemoryBlock(block, bytesRead))
 		{
-			for (int i = 0; i < bytesRead; i++)
+			for (int i = 0; i < bytesRead; i+=sizeOfValue)
 			{
 				switch (sizeOfValue)
 				{
-				case 1:
-					if (*(char*)valueToSearch == (char)block.buffer[i]) { std::cout << (char)block.buffer[i]; result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
+				case sizeof(char) :
+					if (*(char*)valueToSearch == (char)block.buffer[i]) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
 					break;
-
-				case 4:
-					
-					unsigned char temp[4] = { block.buffer[i], block.buffer[i + 1], block.buffer[i + 2], block.buffer[i + 3] };
-					std::memcpy(&valueRead, temp, 4);
-					if (*(int*)valueToSearch == valueRead) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
-					i += 3;
+				case sizeof(short) :
+				{
+					unsigned char tempBuffer[2] = { block.buffer[i], block.buffer[i + 1] };
+					std::memcpy(&shortVal, tempBuffer, sizeof(short));
+					if (*(short*)valueToSearch == shortVal) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
 					break;
+				}
+				case sizeof(int) :
+				{
+					unsigned char tempBuffer[4] = { block.buffer[i], block.buffer[i + 1], block.buffer[i + 2], block.buffer[i + 3] };
+					std::memcpy(&intVal, tempBuffer, 4);
+					if (*(int*)valueToSearch == intVal) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
+					break;
+				}
+				case sizeof(double) :
+				{
+					unsigned char tempBuffer[8] = { block.buffer[i], block.buffer[i + 1], block.buffer[i + 2], block.buffer[i + 3], block.buffer[i + 4],
+						block.buffer[i + 5], block.buffer[i + 6], block.buffer[i + 7] };
+					std::memcpy(&doubleVal, tempBuffer, sizeof(double));
+					if (*(double*)valueToSearch == doubleVal) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
+					break;
+				}
+				default:
+				{
+					// TODO: Fix string search
+					/*bool stringMatched = false;
+					char* temp = (char*)valueToSearch;
+					for (int j = 0; j < block.size; j++) {
+						for(int k = 0; k < sizeOfValue; k++)
+						{
+							if(temp[k] == (char)block.buffer[j + k])
+							{
+								stringMatched = true;
+							}
+							else { stringMatched = false; break; }
+						}
+						if (stringMatched == true) result.push_back(MemoryScanner::Match(i, sizeOfValue, block));
+					}*/
+					break;
+				}
 				}
 			}
 		}
 	}
 	matches = result;
 }
-void MemoryScanner::MemorySearch(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead)
+
+void MemoryScanner::MemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead)
 {
 	std::vector<MemoryScanner::Match> result;
-	int valueRead = 0;
+	short shortVal = 0;
+	int intVal = 0;
+	double doubleVal = 0;
 	for(auto b : blocks)
 	{
 		MemoryScanner::updateMemoryBlock(b, bytesRead);
@@ -75,22 +112,93 @@ void MemoryScanner::MemorySearch(void* valueToSearch, int sizeOfValue, SIZE_T& b
 		{
 			switch (sizeOfValue)
 			{
-			case 1:	
+			case sizeof(char) :
 				if (*(char*)valueToSearch == (char)match.block.buffer[match.offset]) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
 				break;
-
-			case 4:
-				unsigned char temp[4] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1], match.block.buffer[match.offset + 2], match.block.buffer[match.offset + 3] };
-				std::memcpy(&valueRead, temp, 4);
-				if (*(int*)valueToSearch == valueRead) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
+			case sizeof(short) :
+			{
+				unsigned char tempBuffer[2] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1] };
+				std::memcpy(&shortVal, tempBuffer, sizeof(short));
+				if (*(short*)valueToSearch == shortVal) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
 				break;
+			}
+			case sizeof(int) :
+			{
+				unsigned char tempBuffer[4] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1], match.block.buffer[match.offset + 2], 
+					match.block.buffer[match.offset + 3] };
+				std::memcpy(&intVal, tempBuffer, 4);
+				if (*(int*)valueToSearch == intVal) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
+				break;
+			}
+			case sizeof(double) :
+			{
+				unsigned char tempBuffer[8] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1], match.block.buffer[match.offset + 2],
+					match.block.buffer[match.offset + 3], match.block.buffer[match.offset + 4], match.block.buffer[match.offset + 5],
+					match.block.buffer[match.offset + 6], match.block.buffer[match.offset + 7] };
+				std::memcpy(&doubleVal, tempBuffer, sizeof(double));
+				if (*(double*)valueToSearch == doubleVal) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
+				break;
+			}
+			default:
+			{
+				// TODO: Fix string search
+				/*bool stringMatched = false;
+				const char* temp = (const char*)valueToSearch;
+				for (int j = 0; j < match.block.size; j++) {
+					for (int k = 0; k < sizeOfValue; k++)
+					{
+						if (temp[k] == (char)match.block.buffer[j + k])
+						{
+							stringMatched = true;
+						}
+						else { stringMatched = false; break; }
+					}
+					if (stringMatched == true) result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block));
+				}*/
+				break;
+			}
 			}
 		}
 	}
 	matches = result;
 }
 
-int MemoryScanner::search(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead)
+//Cleaning up the 2 search functions, by handling the search in one function => removing duplicate code. Has to be fixed
+/*MemoryScanner::Match MemoryScanner::searchInBuffer(void* valueToSearch, short sizeOfValue, SIZE_T bytesRead, MemoryScanner::MemoryBlock block, int offset)
+{
+	short shortVal = 0;
+	int intVal = 0;
+	double doubleVal = 0;
+	unsigned char shortTempBuffer[2] = { block.buffer[offset], block.buffer[offset + 1] };
+	unsigned char intTempBuffer[4] = { block.buffer[offset], block.buffer[offset + 1], block.buffer[offset + 2], block.buffer[offset + 3] };
+	unsigned char doubleTempBuffer[8] = { block.buffer[offset], block.buffer[offset + 1], block.buffer[offset + 2], block.buffer[offset + 3], block.buffer[offset + 4],
+	block.buffer[offset + 5], block.buffer[offset + 6], block.buffer[offset + 7] };
+	MemoryScanner::Match result;
+
+	switch (sizeOfValue)
+	{
+	case sizeof(char) :
+		if (*(char*)valueToSearch == (char)block.buffer[offset]) { result = (MemoryScanner::Match(offset, sizeOfValue, block)); }
+		break;
+	case sizeof(short) :
+		std::memcpy(&shortVal, shortTempBuffer, sizeof(short));
+		if (*(short*)valueToSearch == shortVal) { result = (MemoryScanner::Match(offset, sizeOfValue, block)); }
+		break;
+	case sizeof(int) :
+		std::memcpy(&intVal, intTempBuffer, 4);
+		if (*(int*)valueToSearch == intVal) 
+		{ result = (MemoryScanner::Match(offset, sizeOfValue, block)); }
+		break;
+	case sizeof(double) :
+		std::memcpy(&doubleVal, doubleTempBuffer, sizeof(double));
+		if (*(double*)valueToSearch == doubleVal) { result = (MemoryScanner::Match(offset, sizeOfValue, block)); }
+		break;
+	}
+
+	return result;
+}*/
+
+int MemoryScanner::search(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead)
 {
 	if(matches.empty())
 	{
@@ -103,12 +211,38 @@ int MemoryScanner::search(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRea
 	return matches.size();
 }
 
-void MemoryScanner::memDump(HANDLE hProcess, unsigned char* baseAddress, SIZE_T offset, int sizeOfValue)
+int MemoryScanner::writeToAllMatches(void* valueToWrite, short sizeOfValue, SIZE_T& bytesRead) 
 {
-	unsigned char* targetAddress = baseAddress + offset;
-	std::vector<unsigned char> buffer(sizeOfValue);
+	for (auto& match : matches) 
+	{
+		switch (sizeOfValue) 
+		{
+		case sizeof(char) :
+			WriteProcessMemory(process, match.block.baseAddress + match.offset, (char*)valueToWrite, sizeof(char), &bytesRead);
+			break;
+		case sizeof(short) :
+			WriteProcessMemory(process, match.block.baseAddress + match.offset, (short*)valueToWrite, sizeof(short), &bytesRead);
+			break;
+		case sizeof(int) :
+			WriteProcessMemory(process, match.block.baseAddress + match.offset, (int*)valueToWrite, sizeof(int), &bytesRead);
+			break;
+		case sizeof(double) :
+			WriteProcessMemory(process, match.block.baseAddress + match.offset, (double*)valueToWrite, sizeof(double), &bytesRead);
+			break;
+		default:
+			//WriteProcessMemory(process, match.block.baseAddress + match.offset, (const char*)valueToWrite, sizeOfValue, &bytesRead);
+			break;
+		}
+	}
+	return 0;
+}
+
+void MemoryScanner::memDump(MemoryScanner::Match m)
+{
+	unsigned char* targetAddress = m.block.baseAddress + m.offset;
+	//std::vector<unsigned char> buffer(m.valueSize);
 	SIZE_T bytesRead;
 
-	std::cout << "Debug: Base Address: " << std::hex << reinterpret_cast<uintptr_t>(baseAddress)
-		<< ", Offset: " << offset << ", Target Address: " << reinterpret_cast<uintptr_t>(targetAddress) << std::endl;
+	std::cout << "Debug: Base Address: " << std::hex << reinterpret_cast<uintptr_t>(m.block.baseAddress)
+		<< ", Offset: " << m.offset << ", Target Address: " << reinterpret_cast<uintptr_t>(targetAddress) << std::endl;
 }

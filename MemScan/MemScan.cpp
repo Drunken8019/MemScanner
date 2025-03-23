@@ -19,12 +19,10 @@ std::map<std::string, functionReference> commands = { {"search", (functionRefere
 std::vector<MemoryScanner::Match> savedMatches;
 MemoryScanner m1;
 
-int main()
+int main(int argc, char* argv)
 {
-	
 	printHeader();
 	std::string in = "";
-
 	//---------------CLI----------------
 	do
 	{
@@ -36,9 +34,6 @@ int main()
 		}
 		else if (in.compare("exit") != 0) std::cout << "\"" + in + "\" " + "is not recognized as a command. Use \"help\" to view all available commands." << std::endl;
 	} while (in.compare("exit") != 0);
-
-
-
 }
 
 static void printAllProcesses()
@@ -85,13 +80,19 @@ static void runSearch()
 {
 	DWORD pid;
 	SIZE_T bytesRead;
-	int writeContent = 0;
 	std::map<std::string, int> searchCommands{ {"printAdr", 0}, {"write", 1}, {"help", 2}, { "save", 3 }, {"exit", 4}};
-	int d = 0;
+	//int d = 0;
+	int valSize = 0;
 	std::string in = "";
+	std::string toWrite = "";
 	std::cout << "memscan search> Enter PID: ";
 	std::cin >> pid;
 	m1 = { pid };
+
+	std::cout << "memscan search> Enter value size: ";
+	std::cin >> valSize;
+	void* d = 0;
+	void* writeContent = 0;
 
 	int matchCount = 0;
 
@@ -106,19 +107,34 @@ static void runSearch()
 			{
 			case 0:
 				if (matchCount == 0) std::cout << "No adresses to print." << std::endl;
-				for (auto& a : m1.matches)
+				else 
 				{
-					std::cout << (unsigned char)a.block.baseAddress + a.offset << "\n";
+					for(auto& match : m1.matches)
+					{
+						m1.memDump(match);
+					}
 				}
 				break;
 
 			case 1:
 				std::cout << "memscan write> Value: ";
-				std::cin >> writeContent;
-				for (auto& a : m1.matches)
+				std::cin >> toWrite;
+				switch (valSize) 
 				{
-					WriteProcessMemory(m1.process, a.block.baseAddress + a.offset, &writeContent, sizeof(writeContent), NULL);
+				case sizeof(char) :
+					writeContent = new char(toWrite.at(0));
+					break;
+				case sizeof(short) :
+					writeContent = new short(std::stoi(toWrite));
+					break;
+				case sizeof(int) :
+					writeContent = new int(std::stoi(toWrite));
+					break;
+				case sizeof(double) :
+					writeContent = new double(std::stod(toWrite));
+					break;
 				}
+				m1.writeToAllMatches(writeContent, valSize, bytesRead);
 				break;
 
 			case 2:
@@ -130,7 +146,7 @@ static void runSearch()
 				{
 					saveMatch(a);
 				}
-				std::cout << m1.matches.size() << " matche(s) saved." << std::endl;
+				std::cout << m1.matches.size() << " match(es) saved." << std::endl;
 				break;
 
 			case 4:
@@ -138,13 +154,32 @@ static void runSearch()
 			}
 		}
 		else 
-		{
-			d = std::stoi(in);
-			matchCount = m1.search(&d, 4, bytesRead);
+		{	
+			switch (valSize) 
+			{
+			case sizeof(char) :
+				d = new char(in.at(0));
+				break;
+			case sizeof(short) :
+				d = new short(std::stoi(in));
+				break;
+			case sizeof(int) :
+				d = new int(std::stoi(in));
+				break;
+			case sizeof(double) :
+				d = new double(std::stod(in));
+				break;
+			default:
+				// TODO: Fix string search
+				//d = (void*)in.c_str();
+			}
+			matchCount = m1.search(d, valSize, bytesRead);
 			std::cout << "Match count: " << matchCount << "\n";
-			matchCount = 0;
 		}
 	} while (in.compare("exit") != 0);
+
+	delete(d);
+	delete(writeContent);
 }
 
 static void write()

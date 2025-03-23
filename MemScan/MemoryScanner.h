@@ -31,7 +31,7 @@ public:
 
 	MemoryScanner()
 	{
-
+		process = NULL;
 	}
 
 	MemoryScanner(DWORD pid) :
@@ -44,10 +44,11 @@ public:
 	HANDLE getProcessHandle(DWORD pid);
 	std::vector<MemoryScanner::MemoryBlock> getMemoryInformation(unsigned char* baseAddress);
 	boolean updateMemoryBlock(MemoryBlock& block, SIZE_T& bytesRead);
-	void initMemorySearch(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
-	void MemorySearch(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
-	int search(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
-	void memDump(HANDLE hProcess, unsigned char* baseAddress, SIZE_T offset, int sizeOfValue);
-	boolean writeToAllMatches(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
+	void initMemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead);
+	void MemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead);
+	//MemoryScanner::Match searchInBuffer(void* valueToSearch, short sizeOfValue, SIZE_T bytesRead, MemoryScanner::MemoryBlock block, int offset);
+	int search(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead);
+	void memDump(MemoryScanner::Match m);
+	int writeToAllMatches(void* valueToWrite, short sizeOfValue, SIZE_T& bytesRead);
 };
 
