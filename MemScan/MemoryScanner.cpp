@@ -36,6 +36,7 @@ void MemoryScanner::initMemorySearch(void* valueToSearch, short sizeOfValue, SIZ
 	short shortVal = 0;
 	int intVal = 0;
 	double doubleVal = 0;
+	MemoryScanner::Match temp;
 
 	std::vector<MemoryScanner::Match> result;
 	for (auto& block : blocks)
@@ -44,37 +45,13 @@ void MemoryScanner::initMemorySearch(void* valueToSearch, short sizeOfValue, SIZ
 		{
 			for (int i = 0; i < bytesRead; i+=sizeOfValue)
 			{
-				switch (sizeOfValue)
-				{
-				case sizeof(char) :
-					if (*(char*)valueToSearch == (char)block.buffer[i]) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
-					break;
-				case sizeof(short) :
-				{
-					unsigned char tempBuffer[2] = { block.buffer[i], block.buffer[i + 1] };
-					std::memcpy(&shortVal, tempBuffer, sizeof(short));
-					if (*(short*)valueToSearch == shortVal) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
-					break;
-				}
-				case sizeof(int) :
-				{
-					unsigned char tempBuffer[4] = { block.buffer[i], block.buffer[i + 1], block.buffer[i + 2], block.buffer[i + 3] };
-					std::memcpy(&intVal, tempBuffer, 4);
-					if (*(int*)valueToSearch == intVal) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
-					break;
-				}
-				case sizeof(double) :
-				{
-					unsigned char tempBuffer[8] = { block.buffer[i], block.buffer[i + 1], block.buffer[i + 2], block.buffer[i + 3], block.buffer[i + 4],
-						block.buffer[i + 5], block.buffer[i + 6], block.buffer[i + 7] };
-					std::memcpy(&doubleVal, tempBuffer, sizeof(double));
-					if (*(double*)valueToSearch == doubleVal) { result.push_back(MemoryScanner::Match(i, sizeOfValue, block)); }
-					break;
-				}
+				temp = searchInBuffer(valueToSearch, sizeOfValue, bytesRead, block, i);
+				if (temp.valueSize != 0) result.push_back(temp);
+				/*
 				default:
 				{
 					// TODO: Fix string search
-					/*bool stringMatched = false;
+					bool stringMatched = false;
 					char* temp = (char*)valueToSearch;
 					for (int j = 0; j < block.size; j++) {
 						for(int k = 0; k < sizeOfValue; k++)
@@ -86,10 +63,10 @@ void MemoryScanner::initMemorySearch(void* valueToSearch, short sizeOfValue, SIZ
 							else { stringMatched = false; break; }
 						}
 						if (stringMatched == true) result.push_back(MemoryScanner::Match(i, sizeOfValue, block));
-					}*/
+					}
 					break;
 				}
-				}
+				}*/
 			}
 		}
 	}
@@ -99,6 +76,7 @@ void MemoryScanner::initMemorySearch(void* valueToSearch, short sizeOfValue, SIZ
 void MemoryScanner::MemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead)
 {
 	std::vector<MemoryScanner::Match> result;
+	MemoryScanner::Match temp;
 	short shortVal = 0;
 	int intVal = 0;
 	double doubleVal = 0;
@@ -108,41 +86,15 @@ void MemoryScanner::MemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T&
 	}
 	for (auto& match : matches)
 	{
-		if(match.block.buffer != NULL)
+		if (match.block.buffer != NULL)
 		{
-			switch (sizeOfValue)
-			{
-			case sizeof(char) :
-				if (*(char*)valueToSearch == (char)match.block.buffer[match.offset]) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
-				break;
-			case sizeof(short) :
-			{
-				unsigned char tempBuffer[2] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1] };
-				std::memcpy(&shortVal, tempBuffer, sizeof(short));
-				if (*(short*)valueToSearch == shortVal) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
-				break;
-			}
-			case sizeof(int) :
-			{
-				unsigned char tempBuffer[4] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1], match.block.buffer[match.offset + 2], 
-					match.block.buffer[match.offset + 3] };
-				std::memcpy(&intVal, tempBuffer, 4);
-				if (*(int*)valueToSearch == intVal) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
-				break;
-			}
-			case sizeof(double) :
-			{
-				unsigned char tempBuffer[8] = { match.block.buffer[match.offset], match.block.buffer[match.offset + 1], match.block.buffer[match.offset + 2],
-					match.block.buffer[match.offset + 3], match.block.buffer[match.offset + 4], match.block.buffer[match.offset + 5],
-					match.block.buffer[match.offset + 6], match.block.buffer[match.offset + 7] };
-				std::memcpy(&doubleVal, tempBuffer, sizeof(double));
-				if (*(double*)valueToSearch == doubleVal) { result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block)); }
-				break;
-			}
+			temp = searchInBuffer(valueToSearch, sizeOfValue, bytesRead, match.block, match.offset);
+			if(temp.valueSize != 0) result.push_back(temp);
+			/*
 			default:
 			{
 				// TODO: Fix string search
-				/*bool stringMatched = false;
+				bool stringMatched = false;
 				const char* temp = (const char*)valueToSearch;
 				for (int j = 0; j < match.block.size; j++) {
 					for (int k = 0; k < sizeOfValue; k++)
@@ -154,17 +106,17 @@ void MemoryScanner::MemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T&
 						else { stringMatched = false; break; }
 					}
 					if (stringMatched == true) result.push_back(MemoryScanner::Match(match.offset, sizeOfValue, match.block));
-				}*/
+				}
 				break;
 			}
-			}
+			}*/
 		}
 	}
 	matches = result;
 }
 
 //Cleaning up the 2 search functions, by handling the search in one function => removing duplicate code. Has to be fixed
-/*MemoryScanner::Match MemoryScanner::searchInBuffer(void* valueToSearch, short sizeOfValue, SIZE_T bytesRead, MemoryScanner::MemoryBlock block, int offset)
+MemoryScanner::Match MemoryScanner::searchInBuffer(void* valueToSearch, short sizeOfValue, SIZE_T bytesRead, MemoryScanner::MemoryBlock block, int offset)
 {
 	short shortVal = 0;
 	int intVal = 0;
@@ -196,7 +148,7 @@ void MemoryScanner::MemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T&
 	}
 
 	return result;
-}*/
+}
 
 int MemoryScanner::search(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead)
 {

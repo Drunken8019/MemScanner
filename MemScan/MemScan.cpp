@@ -172,6 +172,7 @@ static void runSearch()
 			default:
 				// TODO: Fix string search
 				//d = (void*)in.c_str();
+				break;
 			}
 			matchCount = m1.search(d, valSize, bytesRead);
 			std::cout << "Match count: " << matchCount << "\n";

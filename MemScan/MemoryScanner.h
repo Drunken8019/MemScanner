@@ -16,6 +16,9 @@ public:
 		MemoryBlock(MEMORY_BASIC_INFORMATION* memoryInfo) :
 			baseAddress((unsigned char*)memoryInfo->BaseAddress), size(memoryInfo->RegionSize), buffer((unsigned char*)malloc(memoryInfo->RegionSize)) {
 		}
+		MemoryBlock() :
+			baseAddress(NULL), size(0), buffer(NULL) {
+		}
 	};
 
 	struct Match
@@ -26,6 +29,9 @@ public:
 
 		Match(SIZE_T off, SIZE_T valSize, MemoryBlock b) :
 			offset(off), valueSize(valSize), block(b) {
+		}
+		Match() :
+			offset(0), valueSize(0), block() {
 		}
 	};
 
@@ -46,7 +52,7 @@ public:
 	boolean updateMemoryBlock(MemoryBlock& block, SIZE_T& bytesRead);
 	void initMemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead);
 	void MemorySearch(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead);
-	//MemoryScanner::Match searchInBuffer(void* valueToSearch, short sizeOfValue, SIZE_T bytesRead, MemoryScanner::MemoryBlock block, int offset);
+	MemoryScanner::Match searchInBuffer(void* valueToSearch, short sizeOfValue, SIZE_T bytesRead, MemoryScanner::MemoryBlock block, int offset);
 	int search(void* valueToSearch, short sizeOfValue, SIZE_T& bytesRead);
 	void memDump(MemoryScanner::Match m);
 	int writeToAllMatches(void* valueToWrite, short sizeOfValue, SIZE_T& bytesRead);
