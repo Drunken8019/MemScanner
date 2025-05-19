@@ -16,7 +16,7 @@ static void write();
 
 std::map<std::string, functionReference> commands = { {"search", (functionReference) runSearch}, {"tasklist", (functionReference) printAllProcesses},
 	{"help", (functionReference)printHelp}, {"write", (functionReference)write} };
-std::vector<MemoryScanner::Match> savedMatches;
+std::vector<MemoryScanner::Match> savedMatches;w
 MemoryScanner m1;
 
 int main()

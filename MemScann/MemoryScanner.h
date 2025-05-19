@@ -49,5 +49,6 @@ public:
 	int search(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
 	void memDump(HANDLE hProcess, unsigned char* baseAddress, SIZE_T offset, int sizeOfValue);
 	boolean writeToAllMatches(void* valueToSearch, int sizeOfValue, SIZE_T& bytesRead);
+
 };
 
